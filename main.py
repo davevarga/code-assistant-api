@@ -2,8 +2,9 @@ import os
 from dotenv import load_dotenv
 from openai import OpenAI
 
-from functions import show_tool, create_tool, open_tool, insert_tool
+from functions import tools, tool_functions
 from llm.handler import EventHandler
+from llm import context
 
 
 # Import environment variables from .env file
@@ -21,20 +22,23 @@ if __name__ == '__main__':
 
     assistant = client.beta.assistants.update(
         assistant_id=assistant_id,
-        tools=[show_tool, create_tool, open_tool, insert_tool]
+        tools=tools
     )
-
-    message = ("Create a python file called fibonacci.py Implement in this file"
-               "a fibonacci sequence with a recursive funciton.")
+    message = (
+        "Create a python file called fibonacci.py Implement in this file"
+        "a fibonacci sequence with a recursive function."
+    )
     response = client.beta.threads.messages.create(
         thread_id=thread.id,
         role="user",
         content=message,
     )
+    # Pass all available tools to the handler
+    handler = EventHandler(client, tool_functions)
 
     with client.beta.threads.runs.stream(
             thread_id=thread.id,
             assistant_id=assistant.id,
-            event_handler=EventHandler(client)
+            event_handler=handler,
     ) as stream:
         stream.until_done()

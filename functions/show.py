@@ -1,42 +1,64 @@
-def extract_code_snippet(file_path: str, start_line: int, end_line: int) -> str:
-    """
-    Extracts and formats a snippet of code from a file, numbering each line.
-    The output includes the number of lines before and after the snippet for context.
-    If invalid line numbers are given, an explicit error message is returned.
+from llm import context
 
-    :param file_path: Path to the Python file.
-    :param start_line: The starting line number (1-based index).
-    :param end_line: The ending line number (1-based index).
-    :return: A formatted string containing the numbered snippet with context info or an error message.
-    """
+#  Extracts a portion of a Python file, numbers each line,
+#  and includes information about how many lines exist before and after the snippet
+show_tool = {
+    "type": "function",
+    "function": {
+        "name": "show",
+        "description": "Extracts and formats a snippet of code from a file,"
+                       "numbering each line. The output includes the number"
+                       "of lines before and after the snippet for context",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "from": {
+                    "type": "number",
+                    "description": "The first from the file to be included in the snipped"
+                },
+                "to": {
+                    "type": "number",
+                    "description": "Line number until the snippet is shown"
+                }
+            },
+            "required": ["from", "to"],
+            "additionalProperties": False
+        }
+    }
+}
+
+
+def format_snippet(lines, start, end):
+    return [f"{i + start}: {line.rstrip()}"
+            for i, line in enumerate(lines[start - 1:end])]
+
+
+def format_header_footer(start, end, total):
+    before = start - 1
+    after = total - end
+    header = f"({before} lines before)" if before > 0 else "(start)"
+    footer = f"({after} lines after)" if after > 0 else "(end)"
+    return header, footer
+
+
+def show(start_line: int, end_line: int) -> str:
     try:
+        file_path = context.get_abs()
         with open(file_path, "r") as file:
             lines = file.readlines()
-
         total_lines = len(lines)
 
-        # Validate line range
         if start_line < 1 or end_line > total_lines or start_line > end_line:
-            return f"Error: Invalid line range. The file has {total_lines} lines, but received start_line={start_line} and end_line={end_line}."
+            return (
+                f"Error: Invalid line range. The file has {total_lines} lines, "
+                f"but received start_line={start_line} and end_line={end_line}."
+            )
 
-        before_count = start_line - 1
-        after_count = total_lines - end_line
-
-        # Extract snippet and number lines artificially
-        snippet = [f"{i+start_line}: {line.rstrip()}" for i, line in enumerate(lines[start_line - 1 : end_line])]
-
-        # Construct final output
-        output = []
-        output.append(f"({before_count} lines before)" if before_count > 0 else "(start)")
-        output.extend(snippet)
-        output.append(f"({after_count} lines after)" if after_count > 0 else "(end)")
-
-        return "\n".join(output).strip()
+        snippet = format_snippet(lines, start_line, end_line)
+        header, footer = format_header_footer(start_line, end_line, total_lines)
+        return "\n".join([header] + snippet + [footer]).strip()
 
     except FileNotFoundError:
         return f"Error: File '{file_path}' not found."
     except Exception as e:
-        return f"Error: {str(e)}"
-
-
-print(extract_code_snippet("show.py", 20, 30))
+        return f"Error: {e}"
