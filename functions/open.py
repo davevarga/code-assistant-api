@@ -1,7 +1,4 @@
 import os
-
-from anyio import current_effective_deadline
-
 from llm import context
 
 
@@ -12,7 +9,8 @@ open_tool = {
     "function": {
         "name": "open",
         "description": "This function let's you navigate in the working directory."
-                       "or open a file for editing. It cannot leave the root directory.",
+                       "or open a file for editing. It cannot leave the root directory."
+                       "To go back use the command with the argument: ../",
         "parameters": {
             "type": "object",
             "properties": {
@@ -34,7 +32,7 @@ def open(name) -> str:
         context.set(name)
         new_context = context.get()
         # We know that it existss
-        return f"{new_context} opened successfully"
+        return f"['{new_context}' opened successfully]"
     except FileNotFoundError:
         return (f"File or directory does not exist in the {context.get()} directory. "
               f"Use the list function to list all the content "

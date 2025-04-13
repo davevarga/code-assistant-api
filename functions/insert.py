@@ -23,7 +23,7 @@ insert_tool = {
                     "description": "The python code to be inserted"
                 }
             },
-            "required": ["from", "to"],
+            "required": ["line_number", "code"],
             "additionalProperties": False
         }
     }

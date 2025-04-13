@@ -12,11 +12,11 @@ show_tool = {
         "parameters": {
             "type": "object",
             "properties": {
-                "from": {
+                "start": {
                     "type": "number",
                     "description": "The first from the file to be included in the snipped"
                 },
-                "to": {
+                "end": {
                     "type": "number",
                     "description": "Line number until the snippet is shown"
                 }
@@ -28,37 +28,36 @@ show_tool = {
 }
 
 
-def format_snippet(lines, start, end):
-    return [f"{i + start}: {line.rstrip()}"
-            for i, line in enumerate(lines[start - 1:end])]
-
-
-def format_header_footer(start, end, total):
+def format_response(start, end, lines):
+    total = len(lines)
     before = start - 1
     after = total - end
-    header = f"({before} lines before)" if before > 0 else "(start)"
+
+    header = (f"[File: {context.get()} ({total} lines in total)]"
+              f"({before} lines before)") if before > 0 else "(start)"
+    snippet = [f"{i + start}: {line.rstrip()}"
+            for i, line in enumerate(lines[start - 1:end])]
     footer = f"({after} lines after)" if after > 0 else "(end)"
-    return header, footer
+
+    return "\n".join([header] + snippet + [footer]).strip()
 
 
-def show(start_line: int, end_line: int) -> str:
+def show(start: int, end: int) -> str:
+    file_path = context.get_abs()
     try:
-        file_path = context.get_abs()
         with open(file_path, "r") as file:
             lines = file.readlines()
         total_lines = len(lines)
 
-        if start_line < 1 or end_line > total_lines or start_line > end_line:
+        if start < 1 or end > total_lines or start > end:
             return (
                 f"Error: Invalid line range. The file has {total_lines} lines, "
-                f"but received start_line={start_line} and end_line={end_line}."
+                f"but received start_line={start} and end_line={end}."
             )
-
-        snippet = format_snippet(lines, start_line, end_line)
-        header, footer = format_header_footer(start_line, end_line, total_lines)
-        return "\n".join([header] + snippet + [footer]).strip()
+        return format_response(start, end, lines)
 
     except FileNotFoundError:
-        return f"Error: File '{file_path}' not found."
+        return (f"Error: File '{file_path}' not found in current directory."
+                f"Use the list function to list all the content")
     except Exception as e:
         return f"Error: {e}"

@@ -48,14 +48,3 @@ def create(name: str) -> str:
         # It's a directory
         os.makedirs(path, exist_ok=True)
         return f"Directory created: {path}"
-
-
-def list():
-    working_directory = os.getcwd()
-    response = ""
-    for content in os.listdir(working_directory):
-        response = response + f"-> {content}\n"
-    return response
-
-
-
