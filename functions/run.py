@@ -6,38 +6,23 @@ import sys
 import os
 
 
-edit_tool = {
+run_tool = {
     "type": "function",
     "function": {
         "name": "run",
-        "description": "Edits an open file. An interval of code snippet is given,"
-                       "and the content in the code captured by the code snippet"
-                       "is changed to the given content. Use multiple edit commands"
-                       "instead of congesting into a single one.",
+        "description": "Runs the last opened python file. "
+                       "Returns the exact output of the run"
+                       "In case of errors, a detailed description will be provided.",
         "parameters": {
             "type": "object",
-            "properties": {
-                "from": {
-                    "type": "number",
-                    "description": "Marks the beginning of the interval"
-                                   "where the code snippet should be replaced"
-                },
-                "to": {
-                    "type": "number",
-                    "description": "Marks the end of the interval. All code"
-                                   "between the beginning and end of the interval"
-                                   "will be replaced"
-                },
-                "code": {
-                    "type": "string",
-                    "description": "The python code to be inserted between the lines"
-                }
-            },
-            "required": ["from", "to"],
+            "properties": {},
+            "required": [],
             "additionalProperties": False
         }
     }
 }
+
+
 def response_formatter(output, errors, status) -> str:
     header = [f"Running {context.get()} with exit code {status}:"]
     if status != 0:
@@ -46,6 +31,7 @@ def response_formatter(output, errors, status) -> str:
 
     output = output or ["The application ran successfully but produced no output."]
     return "\n".join(header + output)
+
 
 def run() -> str:
     file_path = context.get_abs()

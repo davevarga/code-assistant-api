@@ -2,10 +2,10 @@ from llm import context
 import os
 
 
-lists_tool = {
+list_tool = {
     "type": "function",
     "function": {
-        "name": "lists",
+        "name": "list",
         "description": "Lists folders and files in the current directory"
                        "Only works if the current context is a folder.",
         "parameters": {
@@ -18,7 +18,7 @@ lists_tool = {
 }
 
 
-def lists():
+def lists() -> str:
     abs_path = context.get_abs()
     rel_path = context.get()
     if not os.path.exists(abs_path):

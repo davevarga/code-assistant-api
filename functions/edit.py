@@ -1,5 +1,5 @@
 import os
-from llm import context
+from llm import context, check_syntax
 
 
 edit_tool = {
@@ -16,8 +16,7 @@ edit_tool = {
             "properties": {
                 "start": {
                     "type": "number",
-                    "description": "Marks the beginning of the interval"
-                                   "where the code snippet should be replaced."
+                    "description": "Beginning of the snippet"
                                    "The number for the first line in a file is 1"
                 },
                 "end": {
@@ -40,6 +39,7 @@ edit_tool = {
 def edit(start: int, end: int, code: str) -> str:
     file_path = context.get_abs()
     try:
+        print('here_edit1')
         with open(file_path, 'r') as file:
             lines = file.readlines()
         total_lines = len(lines)
@@ -61,19 +61,35 @@ def edit(start: int, end: int, code: str) -> str:
             new_lines +
             lines[end:]
         )
-        with open(file_path, 'w') as file:
-            file.writelines(updated_lines)
-        total = len(updated_lines)
-        after = total - end
+        # Commit only correct syntax
+        updated_lines_code = "\n".join(updated_lines)
+        errors = check_syntax(updated_lines_code)
 
-        header = [f"[File: {context.get()} ({total} lines in total)]"]
-        old_lines = [f"{i + start}: {line.rstrip()}"
-                   for i, line in enumerate(old_lines)]
-        separator = [f"(Changed to)"]
-        new_lines = [f"{i + start}: {line.rstrip()}"
-                     for i, line in enumerate(new_lines)]
-        footer = [f"({after} lines after)" if after > 0 else "(end)"]
-        return "\n".join(header + old_lines + separator + new_lines + footer)
+        if errors:
+            # Build response in case of bad code
+            response = [f"{i + start}: {line.rstrip()}\n"
+                         for i, line in enumerate(new_lines)]
+            response += ["(Code returned to following errors)\n"]
+            response += "\n".join(errors) + '\n'
+            response += ['(Changes were not commited to file)\n']
+
+        else:
+            # If no errors write the code in the file
+            with open(file_path, 'w') as file:
+                file.writelines(updated_lines)
+            total_lines = len(updated_lines)
+            after = total_lines - end
+
+            #Format LLM response in case of good code
+            response = [f"{i + start}: {line.rstrip()}\n"
+                       for i, line in enumerate(old_lines)]
+            response += [f"(Changed to)\n"]
+            response += [f"{i + start}: {line.rstrip()}\n"
+                         for i, line in enumerate(new_lines)]
+            response += [f"({after} lines after)\n" if after > 0 else "(end)\n"]
+
+        header = [f"[File: {context.get()} ({total_lines} lines in total)]\n"]
+        return "".join(header + response)
 
     except FileNotFoundError:
         return f"Error: File '{file_path}' not found."

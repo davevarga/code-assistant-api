@@ -2,7 +2,7 @@ import os
 from dotenv import load_dotenv
 from openai import OpenAI
 
-from functions import tools, tool_functions
+from functions import tools, function_tools
 from llm.handler import EventHandler
 from llm import context
 
@@ -22,7 +22,7 @@ if __name__ == '__main__':
 
     assistant = client.beta.assistants.update(
         assistant_id=assistant_id,
-        tools=tools,
+        tools=function_tools,
         instructions="You are a personal math tutor. Write and run code to answer math questions."
     )
     message = (
@@ -55,7 +55,7 @@ if __name__ == '__main__':
         content=message,
     )
     # Pass all available tools to the handler
-    handler = EventHandler(client, tool_functions)
+    handler = EventHandler(client, tools)
 
     with client.beta.threads.runs.stream(
             thread_id=thread.id,

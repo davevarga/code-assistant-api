@@ -1,4 +1,4 @@
-from llm import context
+from llm import context, check_syntax
 
 # A function that inserts code at a specified line in a file.
 # It ensures that the insertion index is valid
@@ -44,7 +44,17 @@ def insert(line_number: int, code: str) -> str:
         # Insert the new code at the correct position
         lines.insert(line_number, code + "\n")
 
+        # Make alterations only with syntactically correct code
+        # In case of errors give feedback to the llm.
+        errors = check_syntax('\n'.join(lines))
+        if errors:
+            feedback = f"[{len(errors)} errors]\n"
+            feedback += "\n".join(errors)
+            feedback += "\n(code wasn't inserted due to errors)"
+            return feedback
+
         # Write the modified content back to the file
+
         with open(file_path, "w") as file:
             file.writelines(lines)
 
