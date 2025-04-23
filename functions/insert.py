@@ -14,7 +14,7 @@ insert_tool = {
         "parameters": {
             "type": "object",
             "properties": {
-                "line_number": {
+                "start": {
                     "type": "number",
                     "description": "The line before which the code will be inserted"
                 },
@@ -23,42 +23,49 @@ insert_tool = {
                     "description": "The python code to be inserted"
                 }
             },
-            "required": ["line_number", "code"],
+            "required": ["start", "code"],
             "additionalProperties": False
         }
     }
 }
 
 
-def insert(line_number: int, code: str) -> str:
+def insert(start: int, code: str) -> str:
     file_path = context.get_abs()
     try:
         with open(file_path, "r") as file:
             lines = file.readlines()
         total_lines = len(lines)
 
-        # Validate line number
-        if line_number < 0 or line_number > total_lines + 1:
-            return f"Error: Invalid line number. The file has {total_lines} lines, but received line_number={line_number}."
+        # Validate line interval
+        start = max(start, 1)
+        start = min(start, total_lines - 1)
 
         # Insert the new code at the correct position
-        lines.insert(line_number, code + "\n")
+        lines.insert(start, code + "\n")
+        code_lines = code.splitlines()
 
         # Make alterations only with syntactically correct code
         # In case of errors give feedback to the llm.
         errors = check_syntax('\n'.join(lines))
-        if errors:
-            feedback = f"[{len(errors)} errors]\n"
-            feedback += "\n".join(errors)
-            feedback += "\n(code wasn't inserted due to errors)"
-            return feedback
+
 
         # Write the modified content back to the file
-
         with open(file_path, "w") as file:
             file.writelines(lines)
 
-        return f"Success: Code inserted at line {line_number}."
+        # Create response for the LLM
+        response = [f"{i + start}: {line.rstrip()}\n"
+                    for i, line in enumerate(code_lines)]
+
+        if errors:
+            # In case of erroneous code provide feedback
+            response += ["(Code returned to following errors)\n"]
+            response += "\n".join(errors) + '\n'
+
+        # In case of syntax error free code give feedback
+        header = [f"[File: {context.get()} ({total_lines} lines in total)]\n"]
+        return "".join(header + response)
 
     except FileNotFoundError:
         return f"Error: File '{file_path}' not found."

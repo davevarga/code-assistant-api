@@ -26,7 +26,7 @@ edit_tool = {
                 "code": {
                     "type": "string",
                     "description": "The python code to be inserted between the lines."
-                                   "Line indentations should be"
+                                   "Line indentations should be provided."
                 }
             },
             "required": ["start", "end", "code"],
@@ -39,16 +39,16 @@ edit_tool = {
 def edit(start: int, end: int, code: str) -> str:
     file_path = context.get_abs()
     try:
-        print('here_edit1')
         with open(file_path, 'r') as file:
             lines = file.readlines()
         total_lines = len(lines)
 
-        if start < 1 or end > total_lines or start > end:
-            return (
-                f"Error: Invalid range. The file has {total_lines} lines, "
-                f"but received start_line={start} and end_line={end}."
-            )
+        # Validate line interval
+        start = max(start, 1)
+        start = min(start, total_lines - 1)
+        end = min(end, total_lines - 1)
+        end = max(end, 1)
+
         # Prepare new content as a list of lines with newline characters
         new_lines = [line if line.endswith('\n') else line + '\n' 
                      for line in code.splitlines()]
@@ -61,31 +61,31 @@ def edit(start: int, end: int, code: str) -> str:
             new_lines +
             lines[end:]
         )
-        # Commit only correct syntax
+        # Check syntax for the updated file
         updated_lines_code = "\n".join(updated_lines)
         errors = check_syntax(updated_lines_code)
 
+        # Write code to the file
+        with open(file_path, 'w') as file:
+            file.writelines(updated_lines)
+        total_lines = len(updated_lines)
+        after = total_lines - end
+
+        # Give feedback about the changes
+        response = [f"{i + start}: {line.rstrip()}\n"
+                    for i, line in enumerate(old_lines)]
+        response += [f"(Changed to)\n"]
+        response += [f"{i + start}: {line.rstrip()}\n"
+                    for i, line in enumerate(new_lines)]
+
         if errors:
             # Build response in case of bad code
-            response = [f"{i + start}: {line.rstrip()}\n"
-                         for i, line in enumerate(new_lines)]
             response += ["(Code returned to following errors)\n"]
             response += "\n".join(errors) + '\n'
-            response += ['(Changes were not commited to file)\n']
 
         else:
             # If no errors write the code in the file
-            with open(file_path, 'w') as file:
-                file.writelines(updated_lines)
-            total_lines = len(updated_lines)
-            after = total_lines - end
-
-            #Format LLM response in case of good code
-            response = [f"{i + start}: {line.rstrip()}\n"
-                       for i, line in enumerate(old_lines)]
-            response += [f"(Changed to)\n"]
-            response += [f"{i + start}: {line.rstrip()}\n"
-                         for i, line in enumerate(new_lines)]
+            # Format LLM response in case of good code
             response += [f"({after} lines after)\n" if after > 0 else "(end)\n"]
 
         header = [f"[File: {context.get()} ({total_lines} lines in total)]\n"]

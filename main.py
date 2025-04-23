@@ -21,9 +21,22 @@ if __name__ == '__main__':
     assistant_id = "asst_YeklFmgl6c5i9AZG1V85Qiy4"
 
     assistant = client.beta.assistants.update(
+        name="Software Engineer",
         assistant_id=assistant_id,
         tools=function_tools,
-        instructions="You are a personal math tutor. Write and run code to answer math questions."
+        instructions="Similarly to software engineers, your task is to solve coding problems"
+                     ""
+                     "You have a diverse toolset at your disposal, to manipulate the project, such as edit, "
+                     "insert, run, etc require a file or directory to be opened. You can do this with the open tool,"
+                     "which let's you navigate in the project. The last opened file or directory is the context, "
+                     "in which many of the tools will be called."
+                     ""
+                     "First search through the project files, looking for the relevant parts for the task. After a picture"
+                     "has been formulated about the code, iteratively make alterations to the project, and test, if the"
+                     "current changes conform to the expectations.s"
+                     ""
+                     "Try to break up the solution code into logically structured parts, adhering to engineering"
+                     "principles and providing an elegant solution to the task at hand."
     )
     message = (
         "Write a Python function simulate_game(commands:"
@@ -63,3 +76,24 @@ if __name__ == '__main__':
             event_handler=handler,
     ) as stream:
         stream.until_done()
+
+    # Retrieve all the conversation.
+    messages = client.beta.threads.messages.list(thread_id=thread.id)
+    for message in messages:
+        print(f"{message.role.upper()}: {message.content[0].text.value}\n")
+
+    # Cumulate all the tokens
+    prompt_tokens = completion_tokens = total_tokens = 0
+    runs = client.beta.threads.runs.list(thread_id=thread.id)
+    for run in runs:
+        if run.usage:
+            completion_tokens += run.usage.completion_tokens
+            prompt_tokens += run.usage.prompt_tokens
+            total_tokens += run.usage.total_tokens
+
+    print(
+        f"Prompt: {prompt_tokens}, "
+        f"Completion: {completion_tokens}, "
+        f"Total: {total_tokens}"
+    )
+
