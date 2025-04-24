@@ -1,42 +1,21 @@
 import os
+from smolagents import tool
 from llm import context, check_syntax
 
 
-edit_tool = {
-    "type": "function",
-    "function": {
-        "name": "edit",
-        "description": "Edits an already opened file. An interval is specified,"
-                       "between which all code is changed to the given content."
-                       "Useful while debugging, or removing unwanted code. For"
-                       "creating new features please use the insert tool."
-                       "Break down large edit into logically structured small edits instead.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "start": {
-                    "type": "number",
-                    "description": "Beginning of the snippet"
-                                   "The number for the first line in a file is 1"
-                },
-                "end": {
-                    "type": "number",
-                    "description": "The last line that will still be replaced."
-                },
-                "code": {
-                    "type": "string",
-                    "description": "The python code to be inserted between the lines."
-                                   "Line indentations should be provided."
-                }
-            },
-            "required": ["start", "end", "code"],
-            "additionalProperties": False
-        }
-    }
-}
-
-
-def edit(start: int, end: int, code: str) -> str:
+@tool
+def edit_file(start: int, end: int, code: str) -> str:
+    """
+    Changes the code lines in the given interval, to the given code,
+    in the code file that was last opened.
+    Args:
+        start: The beginning of the snippet. The first line number is 1.
+        end: The number of the last line to be replaced.
+        code: Python code to be inserted. Line indentation is important.
+    Returns:
+        Feedback based on the outcome of the edit. Provides insight
+        into which lines where replaced by what code.
+    """
     file_path = context.get_abs()
     try:
         with open(file_path, 'r') as file:
@@ -50,9 +29,9 @@ def edit(start: int, end: int, code: str) -> str:
         end = max(end, 1)
 
         # Prepare new content as a list of lines with newline characters
-        new_lines = [line if line.endswith('\n') else line + '\n' 
+        new_lines = [line if line.endswith('\n') else line + '\n'
                      for line in code.splitlines()]
-        old_lines = [line if line.endswith('\n') else line + '\n' 
+        old_lines = [line if line.endswith('\n') else line + '\n'
                      for line in lines[start - 1:end]]
 
         # Replace the target lines
@@ -86,10 +65,10 @@ def edit(start: int, end: int, code: str) -> str:
         else:
             # If no errors write the code in the file
             # Format LLM response in case of good code
-            response += [f"({after} lines after)\n" if after > 0 else "(end)\n"]
+            response += [f"({after} lines after)\n" if after > 0 else "(end)"]
 
-        header = [f"[File: {context.get()} ({total_lines} lines in total)]\n"]
-        return "".join(header + response)
+        header = [f"[File: {context.get()} ({total_lines} lines in total)]"]
+        return "\n".join(header + response)
 
     except FileNotFoundError:
         return f"Error: File '{file_path}' not found."

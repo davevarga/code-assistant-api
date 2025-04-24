@@ -1,36 +1,18 @@
+import os
+from smolagents import tool
 from llm import context, check_syntax
 
-# A function that inserts code at a specified line in a file.
-# It ensures that the insertion index is valid
-# and provides an error message if it's out of bounds.
-insert_tool = {
-    "type": "function",
-    "function": {
-        "name": "insert",
-        "description": "Inserts the given code at the specified line in the file."
-                       "Used to create a new function or class or add a new statement."
-                       "Try to use multiple insert calls instead of just a big one."
-                       "Keep in mind that the code line numbering will change by adding code to a file",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "start": {
-                    "type": "number",
-                    "description": "The line before which the code will be inserted"
-                },
-                "code": {
-                    "type": "string",
-                    "description": "The python code to be inserted"
-                }
-            },
-            "required": ["start", "code"],
-            "additionalProperties": False
-        }
-    }
-}
 
-
-def insert(start: int, code: str) -> str:
+@tool
+def insert_code(start: int, code: str) -> str:
+    """
+    Insert the given code at the specified line number, in the last opened file.
+    Args:
+        start: The line before which the code will be inserted
+        code: The python code to be inserted
+    Returns:
+        Feedback about the success of the insertion.
+    """
     file_path = context.get_abs()
     try:
         with open(file_path, "r") as file:

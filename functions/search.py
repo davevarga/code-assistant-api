@@ -1,3 +1,6 @@
+from typing import List
+
+from smolagents import tool
 from llm import context
 import os
 
@@ -5,32 +8,9 @@ extensions = ('.py', '.pyi', '.sh', '.bash', '.psi'
               '.toml', '.ini', '.cfg', '.json', '.yaml', '.yml'
               '.md', '.rst', '.txt', '.xml', '.html', '.css', '.js')
 
-search_tool = {
-    "type": "function",
-    "function": {
-        "name": "search",
-        "description": "Searches through files and directories to find a match for a string"
-                       "Starting from the last opened context, it returns all the files and"
-                       "lines where match has been found to a given string."
-                       "Useful when searching for a function or a class in a project."
-                       "It is not recommended to search for variables as similarly named"
-                       "variables might have different semantics.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "template": {
-                    "type": "string",
-                    "description": "Search operand. The function searches for occurrences "
-                                   "of this string in files and subdirectories"
-                }
-            },
-            "required": [],
-            "additionalProperties": False
-        }
-    }
-}
 
 def search_file(file_path, query):
+    """"""
     results = []
     try:
         with open(file_path, "r", encoding='utf-8', errors='ignore') as file:
@@ -47,8 +27,19 @@ def search_file(file_path, query):
     return results
 
 
+@tool
+def search_dir_for_matches(template: str) -> List[str]:
+    """
+    Starts a search for occurrences of the given string. It searches through any
+    files and subdirectories starting with the current working directory or file.
+    Useful when searching for a function or a class in a project.
+    Args:
+        template (str): The string to search for.
+    Returns:
+        List[str]: A list of all occurrences of the template. Consists of the file
+        path, line number, and a snippet of the code, separated by dashes
+    """
 
-def search(template: str) -> str:
     current_path = context.get_abs()
     root_dir = context.get_root_directory()
 
@@ -67,10 +58,8 @@ def search(template: str) -> str:
 
     content = [
         (f"./{os.path.relpath(occurrence['path'], current_path)}"
-         f" at line {occurrence["line"]}\n"
-         f"\t '{occurrence['snippet']}'")
+         f"-{occurrence["line"]}"
+         f"-{occurrence['snippet']}")
         for occurrence in occurrences
     ]
-    header = [f"[{len(occurrences)} instances found for '{template}'"
-              f" in './{os.path.relpath(current_path, root_dir)}']"]
-    return "\n".join(header + content)
+    return content

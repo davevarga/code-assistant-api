@@ -1,50 +1,36 @@
 import os
-from llm import context
+from llm import context, check_syntax
+from smolagents import tool
 
-# Define a documentation corresponding to chagGPT API.
-create_tool = {
-    "type": "function",
-    "function": {
-        "name": "create",
-        "description": "Creates either a new directory or file"
-                       "with a given extension in the current directory",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "name": {
-                    "type": "string",
-                    "description": "Name of the file or directory to be created"
-                                   "A file is defined by having an extension."
-                }
-            },
-            "required": ["name"],
-            "additionalProperties": False
-        }
-    }
-}
 
-def create(name: str) -> str:
+@tool
+def create_file_or_directory(name: str) -> str:
+    """
+    It creates either a file or directory in the current directory.
+    A file is created if an extension is provided. Otherwise, it
+    creates a new directory.
+    Args:
+        name: Name of the file or directory.
+    Returns:
+        The path of the created file or directory.
+    """
     curr_dir = context.get()
     path = os.path.join(curr_dir, name)
 
     # Check if is already created
     if os.path.exists(path):
-        if os.path.isdir(path):
-            return "Directory %s already exists in the current directory" % path
-        if os.path.isfile(path):
-            return "File %s already exists in the current directory" % path
+        return path
 
     # Normalize the path to avoid issues with trailing slashes
-    path = os.path.normpath(path)
-
     # Extract the base name and check for a file extension
+    path = os.path.normpath(path)
     _, extension = os.path.splitext(path)
 
     if extension:
-        with open(path, 'w') as f:
-            f.write(f"# File {path}") # Write the path in the file
-        return f"File created: {path}"
+        file = open(path, "w")
+        file.write("")
     else:
-        # It's a directory
         os.makedirs(path, exist_ok=True)
-        return f"Directory created: {path}"
+
+    # Return with the path of the created file.
+    return path
