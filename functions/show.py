@@ -14,7 +14,8 @@ def show_code(start: int, end: int) -> str:
         start (int): The first line to show
         end (int): The last line to show
     Returns:
-        A stri
+        str: A formatted string where each line of code is numbered.
+        Before and after the code there is additional context information.
     """
     file_path = context.get_abs()
     try:
@@ -33,7 +34,7 @@ def show_code(start: int, end: int) -> str:
         before = start - 1
         after = total - end
 
-        header = (f"[File: {context.get()} ({total} lines in total)]"
+        header = (f"[File: {context.get()} ({total} lines in total)]\n"
                   f"({before} lines before)") if before > 0 else "(start)"
         snippet = [f"{i + start}: {line.rstrip()}"
                    for i, line in enumerate(lines[start - 1:end])]

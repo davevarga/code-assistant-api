@@ -1,5 +1,5 @@
 import os
-import parso
+import ast
 
 # Context is used by the event handler to keep
 # account of the currently open file or folder
@@ -32,28 +32,20 @@ class ContextHandler:
     def get_abs(self):
         return self.current_path
 
-    def get_root_directory(self):
+    def get_root(self):
         return self.root
+
+    def set_root(self, root_directory):
+        self.root = root_directory
+        self.current_path = root_directory
 
 
 def check_syntax(code: str):
-    grammar = parso.load_grammar(version="3.13")
-    module = grammar.parse(code)
-    code_lines = code.splitlines()
-    lenth = len(code_lines)
-
-    response = []
-    for error in grammar.iter_errors(module):
-        line, column = error.start_pos
-        message = error.message if hasattr(error, 'message') else 'Syntax error'
-        message = message.replace("SyntaxError: ", "")
-
-        # If last line is bad then line is out of index
-        if not 0 < line < lenth:
-            line = line-1
-        statement = f"Error at line {line} ({message}): '{code_lines[line-1].strip()}'"
-        response.append(statement)
-    return response
+    try:
+        ast.parse(code)
+        return None
+    except SyntaxError as e:
+        return [f"Invalid syntax {e}"]
 
 
 # Instantiation takes place now, so that certain

@@ -1,5 +1,5 @@
 import os
-from llm import context, check_syntax
+from llm import context
 from smolagents import tool
 
 
@@ -10,9 +10,9 @@ def create_file_or_directory(name: str) -> str:
     A file is created if an extension is provided. Otherwise, it
     creates a new directory.
     Args:
-        name: Name of the file or directory.
+        name (str): Name of the file or directory.
     Returns:
-        The path of the created file or directory.
+        str: The path of the created file or directory.
     """
     curr_dir = context.get()
     path = os.path.join(curr_dir, name)
@@ -29,6 +29,7 @@ def create_file_or_directory(name: str) -> str:
     if extension:
         file = open(path, "w")
         file.write("")
+        context.set(path)
     else:
         os.makedirs(path, exist_ok=True)
 

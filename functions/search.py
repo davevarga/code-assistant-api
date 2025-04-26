@@ -41,8 +41,6 @@ def search_dir_for_matches(template: str) -> List[str]:
     """
 
     current_path = context.get_abs()
-    root_dir = context.get_root_directory()
-
     occurrences = []
     if os.path.isfile(current_path):
         occurrences += search_file(current_path, template)

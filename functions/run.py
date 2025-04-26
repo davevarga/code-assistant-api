@@ -8,16 +8,21 @@ import os
 @tool
 def run_python() -> str:
     """
-    Runs the last opened python file
+    Runs the last opened python file. Use this tool to validate your code,
+    and to check for syntax and runtime errors.
     Returns:
-        The exact output of the run
+        (str): The exact output of the run
     """
+
+
     file_path = context.get_abs()
-    if not os.path.isfile(file_path):
-        return f"Error: File '{file_path}' does not exist."
+    if os.path.isdir(file_path):
+        return (f"You are cure in {context.get()} directory."
+                f"Use the open_file_or_directory tool to open a file.")
 
     if not file_path.endswith('.py'):
-        return f"Error: '{file_path}' is not a Python file."
+        return (f"Error: '{file_path}' is not a Python file."
+                f"Use the open_file_or_directory tool to open a python file.")
 
     try:
         result = subprocess.run(

@@ -8,12 +8,17 @@ def insert_code(start: int, code: str) -> str:
     """
     Insert the given code at the specified line number, in the last opened file.
     Args:
-        start: The line before which the code will be inserted
-        code: The python code to be inserted
+        start (int): The line before which the code will be inserted
+        code (str): The python code to be inserted
     Returns:
-        Feedback about the success of the insertion.
+        str: Feedback about the success of the insertion.
     """
     file_path = context.get_abs()
+    if os.path.isdir(file_path):
+        return (f"You are cure in {context.get()} directory. "
+                f"Use the open_file_or_directory tool to open a file "
+                f"or the create_file_or_directory tool to create one.")
+
     try:
         with open(file_path, "r") as file:
             lines = file.readlines()
@@ -21,16 +26,16 @@ def insert_code(start: int, code: str) -> str:
 
         # Validate line interval
         start = max(start, 1)
-        start = min(start, total_lines - 1)
+        start = min(start, total_lines + 1)
 
         # Insert the new code at the correct position
         lines.insert(start, code + "\n")
         code_lines = code.splitlines()
+        total_lines += len(code_lines)
 
         # Make alterations only with syntactically correct code
         # In case of errors give feedback to the llm.
         errors = check_syntax('\n'.join(lines))
-
 
         # Write the modified content back to the file
         with open(file_path, "w") as file:

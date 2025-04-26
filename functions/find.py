@@ -14,7 +14,7 @@ def find_file(filename: str) -> List[str]:
     Returns:
         List[str]: A list of relative paths from the root
     """
-    root_dir = context.get_root_directory()
+    root_dir = context.get_root()
 
     matches: List[str] = []
     for root, dirs, files in os.walk(root_dir):

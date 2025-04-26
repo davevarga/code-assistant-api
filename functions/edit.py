@@ -1,4 +1,5 @@
 import os
+
 from smolagents import tool
 from llm import context, check_syntax
 
@@ -9,14 +10,20 @@ def edit_file(start: int, end: int, code: str) -> str:
     Changes the code lines in the given interval, to the given code,
     in the code file that was last opened.
     Args:
-        start: The beginning of the snippet. The first line number is 1.
-        end: The number of the last line to be replaced.
-        code: Python code to be inserted. Line indentation is important.
+        start (int): The beginning of the snippet. The first line number is 1.
+        end (int): The number of the last line to be replaced.
+        code (str): Python code to be inserted. Line indentation is important.
     Returns:
-        Feedback based on the outcome of the edit. Provides insight
+        str: Feedback based on the outcome of the edit. Provides insight
         into which lines where replaced by what code.
     """
+    # Chech if in a file
     file_path = context.get_abs()
+    if os.path.isdir(file_path):
+        return (f"You are currently in {context.get()} directory. "
+                f"Use the open_file_or_directory tool to open a file, "
+                f"or the create_file_or_directory tool to create one.")
+
     try:
         with open(file_path, 'r') as file:
             lines = file.readlines()
@@ -67,8 +74,8 @@ def edit_file(start: int, end: int, code: str) -> str:
             # Format LLM response in case of good code
             response += [f"({after} lines after)\n" if after > 0 else "(end)"]
 
-        header = [f"[File: {context.get()} ({total_lines} lines in total)]"]
-        return "\n".join(header + response)
+        header = [f"[File: {context.get()} ({total_lines} lines in total)]\n"]
+        return "".join(header + response)
 
     except FileNotFoundError:
         return f"Error: File '{file_path}' not found."
