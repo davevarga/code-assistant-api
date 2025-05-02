@@ -1,10 +1,10 @@
 import os
-import ast
 
 # Context is used by the event handler to keep
 # account of the currently open file or folder
 
-class ContextHandler:
+
+class ContextManager:
 
     def __init__(self, root, current_path=None):
         self.root = root
@@ -38,16 +38,3 @@ class ContextHandler:
     def set_root(self, root_directory):
         self.root = root_directory
         self.current_path = root_directory
-
-
-def check_syntax(code: str):
-    try:
-        ast.parse(code)
-        return None
-    except SyntaxError as e:
-        return [f"Invalid syntax {e}"]
-
-
-# Instantiation takes place now, so that certain
-# function calling tools can manipulate the context.
-context = ContextHandler('D:/Projects/code-assistant-api')
