@@ -1,0 +1,28 @@
+services:
+  phoenix:
+    image: arizephoenix/phoenix:latest  # replace this with your Phoenix Docker image name or build path
+    ports:
+      - "6006:6006"            # expose the Phoenix server to host and other services
+      - "4317:4317"
+    networks:
+      - agent-net
+
+  agent:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    volumes:
+      - ./results:/results
+    environment:
+      - PHOENIX_COLLECTOR_ENDPOINT=http://phoenix:6006/v1/traces
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - STATS_LOG=/results/swel-codeact.csv
+      - RESULTS_LOG=/results/swel-codeact.jsonl
+    depends_on:
+      - phoenix
+    networks:
+      - agent-net
+
+networks:
+  agent-net:
+    driver: bridge

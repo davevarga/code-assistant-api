@@ -3,10 +3,15 @@ from openinference.instrumentation.smolagents import SmolagentsInstrumentor
 from openinference.instrumentation import using_metadata
 
 from .agents import CodingAgent
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 register(
     project_name="LLMCodeAct-Lite",
-    endpoint="http://localhost:6006/v1/traces",
+    endpoint=os.getenv("PHOENIX_COLLECTOR_ENDPOINT"),
+    batch=True, # uses a batch span processor
 )
 SmolagentsInstrumentor().instrument()
 
