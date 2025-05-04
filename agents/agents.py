@@ -3,7 +3,7 @@ import time
 from smolagents import ToolCallingAgent, LiteLLMModel
 
 from utils import CSVLogger, RepoHandler
-from tools import toolset
+from .tools import toolset
 
 
 agent_description = (
@@ -16,7 +16,7 @@ agent_description = (
 )
 
 class LiteLLMAgent:
-    def __init__(self, logger: CSVLogger = None, **kwargs):
+    def __init__(self, logger: CSVLogger = None):
         # Here the environment should contain the OPENAI_API_KEY variable
         assert os.environ.get('OPENAI_API_KEY') is not None, "OPENAI_API_KEY is not set"
         self.model = LiteLLMModel(
@@ -48,10 +48,9 @@ class LiteLLMAgent:
 
 class CodingAgent(LiteLLMAgent):
     def __init__(self, logger=None, **kwargs):
-        super().__init__(logger, **kwargs)
+        super().__init__(logger)
         self.agent = ToolCallingAgent(
             model=self.model, # Initiate agent with LiteLLM
             tools=toolset,
-            descriptoin=agent_description,
-            **kwargs
+            description=agent_description,
         )

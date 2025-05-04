@@ -1,5 +1,5 @@
 from smolagents import tool
-from llm import context
+
 import subprocess
 import sys
 import os
@@ -13,7 +13,7 @@ def run_python() -> str:
     Returns:
         (str): The exact output of the run
     """
-
+    from utils import context
 
     file_path = context.get_abs()
     if os.path.isdir(file_path):

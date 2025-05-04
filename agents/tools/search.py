@@ -1,7 +1,5 @@
 from typing import List
-
 from smolagents import tool
-from llm import context
 import os
 
 extensions = ('.py', '.pyi', '.sh', '.bash', '.psi'
@@ -39,6 +37,7 @@ def search_dir_for_matches(template: str) -> List[str]:
         List[str]: A list of all occurrences of the template. Consists of the file
         path, line number, and a snippet of the code, separated by dashes
     """
+    from utils import context
 
     current_path = context.get_abs()
     occurrences = []
@@ -56,7 +55,7 @@ def search_dir_for_matches(template: str) -> List[str]:
 
     content = [
         (f"./{os.path.relpath(occurrence['path'], current_path)}"
-         f"-{occurrence["line"]}"
+         f"-{occurrence['line']}"
          f"-{occurrence['snippet']}")
         for occurrence in occurrences
     ]

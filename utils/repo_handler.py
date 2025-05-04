@@ -1,44 +1,54 @@
 import os
 import git
-import time
+from git.util import rmtree
 import shutil
-import stat
-
-
-def handle_remove_readonly(path: str):
-    for root, dirs, files in os.walk(path, topdown=False):
-        for name in files:
-            filename = os.path.join(root, name)
-            os.chmod(filename, stat.S_IWRITE)
+import time
 
 
 class RepoHandler(object):
-    def __init__(self, path: str, logger = None):
+    def __init__(self, root: str, logger = None):
         self.repo = None
         self.logger = logger
-        self.path = path
+        self.root = root
+        self.path = None
 
     def delete(self):
-        if os.path.exists(self.path):
-            shutil.rmtree(self.path, onerror=handle_remove_readonly)
+        # Because os readonly files Windows might not remove files
+        # => git has an integrated deleting mechanism
+        self.repo.close()
+        rmtree(self.path)
+
+        # Clean up the /repo_owner/repo_name/commit_hash
+        os.removedirs(self.root)
 
     def clone(self, name: str, commit: str):
-        # Derive url from name
-        t_start = time.time()
-        url = f'https://github.com/{name}.git'
+        # Every repository cloned should have a distinct dir name
+        # This is in order to keep accidental conflicts under control
+        self.path = os.path.join(self.root, name, commit)
+        if os.path.exists(self.path):
+            self.repo = git.Repo(self.path)
+            return self.path
         try:
-            # Clone the repository without checking out the HEAD
-            self.repo = git.Repo.clone_from(url,self.path,no_checkout=True)
-            # Checkout to specific commit
+            t_start = time.time()
+            # Checkout for an explicit commit
+            self.repo = git.Repo.clone_from(
+                url=f'https://github.com/{name}.git',
+                to_path=self.path,
+                no_checkout=True
+            )
             self.repo.git.checkout(commit)
-        except Exception as e:
-            print("Valami error: ", e)
+        except Exception:
+            # Skip this repository if it couldn't be opened
+            raise RuntimeError(
+                f"Could not clone repository: "
+                f"https://github.com/{name}.git"
+            )
         t_end = time.time()
 
         if self.logger:
-            # Log repository cloning
             inference_time = t_end - t_start
             self.logger.log('cloning_time', inference_time)
+        return self.path
 
     def diff(self):
         if self.repo is None:

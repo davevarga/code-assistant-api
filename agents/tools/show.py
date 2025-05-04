@@ -1,5 +1,6 @@
 from smolagents import tool
-from llm import context
+from utils import context
+
 
 #  Extracts a portion of a Python file, numbers each line,
 #  and includes information about how many lines exist before and after the snippet

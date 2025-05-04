@@ -1,6 +1,6 @@
 import os
 from smolagents import tool
-from llm import context, check_syntax
+from utils import context, check_syntax
 
 
 @tool

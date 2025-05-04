@@ -10,10 +10,14 @@ from agents import using_metadata, metadata
 from agents import CodingAgent
 from utils import CSVLogger, RepoHandler, context
 
+# Load environment variables
+from dotenv import load_dotenv
+load_dotenv()
+
+
 # Configure run
-solutions_path = 'bml-codeact.jsonl'
-log_path = 'bml-codeact.csv'
-csv_logger = CSVLogger('benchmark.csv')
+solutions_path = os.getenv("RESULTS_LOG")
+log_path = os.getenv("STATS_LOG")
 cloning_path = './'
 
 # Create files for logging
@@ -86,6 +90,9 @@ if __name__ == '__main__':
     assert os.path.exists(solutions_path), 'Solutions file does not exist'
     assert os.path.exists(log_path), 'Log file does not exist'
 
+    # Log in file specified by docker compose
+    csv_logger = CSVLogger(log_path)
+
     # Download the dataset from Kaggle:
     dataset_url = 'princeton-nlp/SWE-bench_Lite'
     dataset = load_dataset(dataset_url, split='test')
@@ -95,15 +102,15 @@ if __name__ == '__main__':
 
     # Create agent to solve the task
     coding_agent = CodingAgent(
+        logger=csv_logger,
         add_base_tools=True,
         verbosity_level=0,
         max_steps=25,
         name='coding_agent',
-        logger=csv_logger
     )
     # Helper clones every repository
     repo_handler = RepoHandler(
-        path=cloning_path,
+        root=cloning_path,
         logger=csv_logger,
     )
 
@@ -117,8 +124,9 @@ if __name__ == '__main__':
         prediction = solve_task(
             agent=coding_agent,
             repo=repo_handler,
-            task_id=swebench['instance_id'],
-            description=swebench['problem_statement']
+            task_id=task['instance_id'],
+            description=task['problem_statement'],
+            logger=csv_logger
         )
         # Check instance_id against solution
         assert prediction['instance_id'] == task['instance_id'], \
@@ -130,5 +138,7 @@ if __name__ == '__main__':
         solution_file.write(solution_json + '\n')
         csv_logger.log('id', task['instance_id'])
         csv_logger.save()
+
+        break
 
     solution_file.close()
