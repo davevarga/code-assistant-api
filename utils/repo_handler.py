@@ -1,30 +1,44 @@
 import os
 import git
-from git.util import rmtree
-import shutil
 import time
+from pathlib import Path
+from git.util import rmtree
 
 
 class RepoHandler(object):
-    def __init__(self, root: str, logger = None):
+    def __init__(self, root: (str, Path), logger = None):
         self.repo = None
         self.logger = logger
-        self.root = root
+        self.root = root if type(root) is str else str(root)
         self.path = None
+        self.name = None
+        self.commit = None
 
     def delete(self):
+        if not self.repo:
+            raise RuntimeError(f"No repository to delete")
+        assert self.name, f"Repo {self.path} cloned but has no name"
+        assert self.commit, f"Repo {self.path} cloned but has no commit"
+
         # Because os readonly files Windows might not remove files
         # => git has an integrated deleting mechanism
         self.repo.close()
         rmtree(self.path)
 
-        # Clean up the /repo_owner/repo_name/commit_hash
-        os.removedirs(self.root)
+        # Clean up the /repo_owner/repo_name/commit_hash temp dirs
+        repo_owner = os.path.join(str(self.root), self.name.split("/")[0])
+        repo_name = os.path.join(repo_owner, self.name.split("/")[1])
 
-    def clone(self, name: str, commit: str):
+        if not os.listdir(repo_name): os.rmdir(repo_name)
+        if not os.listdir(repo_owner): os.rmdir(repo_owner)
+
+    def clone(self, name: str, commit: str = None):
         # Every repository cloned should have a distinct dir name
         # This is in order to keep accidental conflicts under control
-        self.path = os.path.join(self.root, name, commit)
+        self.name = name
+        self.commit = commit if commit else 'HEAD'
+        self.path = os.path.join(self.root, name, self.commit)
+
         if os.path.exists(self.path):
             self.repo = git.Repo(self.path)
             return self.path
@@ -32,16 +46,21 @@ class RepoHandler(object):
             t_start = time.time()
             # Checkout for an explicit commit
             self.repo = git.Repo.clone_from(
-                url=f'https://github.com/{name}.git',
                 to_path=self.path,
-                no_checkout=True
+                url=f'https://github.com/{self.name}.git',
+                no_checkout=True if self.commit else False,
             )
-            self.repo.git.checkout(commit)
-        except Exception:
-            # Skip this repository if it couldn't be opened
+            if self.commit:
+                self.repo.git.checkout(self.commit)
+        # Skip this repository if it couldn't be opened
+        except git.exc.GitCommandError:
             raise RuntimeError(
                 f"Could not clone repository: "
-                f"https://github.com/{name}.git"
+                f"https://github.com/{self.name}.git"
+            )
+        except git.exc.GitCommandNotFound as e:
+            raise RuntimeError(
+                f"Network related error: {e}"
             )
         t_end = time.time()
 
@@ -53,7 +72,8 @@ class RepoHandler(object):
     def diff(self):
         if self.repo is None:
             # In case of cloning issues skip this repository.
-            raise RuntimeError(f'Repository {self.repo} was not initialized')
+            raise RuntimeError(f"Repository was not initialized")
 
-        # Create the diff file
-        return self.repo.git.diff()
+        # Stage before creating diff file
+        self.repo.git.add(A=True)
+        return self.repo.git.diff('--cached')

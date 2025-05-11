@@ -1,40 +1,63 @@
 import os
+from pathlib import Path
+
+
+
+# Exceptions parent for specific handling
+class ContextError(Exception):
+    pass
+
+# Raised when cwd is set outside the root,
+# or linked outside root directory
+class ContextPermissionError(ContextError):
+    pass
 
 # Context is used by the event handler to keep
 # account of the currently open file or folder
-
-
 class ContextManager:
 
-    def __init__(self, root, current_path=None):
-        self.root = root
-        if not os.path.isdir(self.root):
-            raise ValueError(f"Root must be an existing directory: {self.root}")
-        self.current_path = current_path if current_path else self.root
+    def __init__(self, root: (str | Path), cwd: (str | Path) = None):
+        if not cwd: cwd = root
 
-    def set(self, target_path: os.PathLike):
-        # Resolve the full absolute path
-        new_path = os.path.normpath(os.path.join(self.current_path, target_path))
+        self.root = root if type(root) is Path else Path(root)
+        self.root = self.root.resolve(strict=False)
+        self.cwd = cwd if type(cwd) is Path else Path(cwd)
+        self.cwd = self.cwd.resolve(strict=False)
 
-        # Ensure we do not leave the root directory
-        # if not os.path.commonpath([self.root, new_path]).startswith(self.root):
-        #     raise PermissionError("Access denied: attempted to move outside the root directory.")
+        if not self.cwd.exists():
+            raise ContextError(f"Path does not exist: {self.cwd}")
+
+        if not self.root.exists():
+            raise ContextError(f"Root does not exist: {self.root}")
+
+        if not (self.root in self.cwd.parents or self.root == self.cwd):
+            raise ContextPermissionError(f"Context outside of root folder")
+
+    def set(self, target_path: (Path, str)):
+        # String type is needed by the LLM
+        if type(target_path) is str: target_path = Path(target_path)
+        target_path = target_path.resolve(strict=False)
 
         # Check if new path exists
-        if not os.path.exists(new_path):
-            raise FileNotFoundError(f"Target path does not exist: {target_path}")
+        if not target_path.exists():
+            raise ContextError(f"Target path does not exist: {target_path}")
+        if not (self.root in target_path.parents or self.root == target_path):
+            raise ContextPermissionError(f"Context outside of root folder")
+        self.cwd = target_path
 
-        self.current_path = new_path
-
-    def get(self):
-        return os.path.relpath(self.current_path, self.root)
-
-    def get_abs(self):
-        return self.current_path
+    def get(self, abs=False):
+        return self.cwd.absolute() if abs else self.cwd
 
     def get_root(self):
         return self.root
 
-    def set_root(self, root_directory):
-        self.root = root_directory
-        self.current_path = root_directory
+    def set_root(self, root: (str, Path)):
+        # Change root only if it is valid.
+        root = root if type(root) is Path else Path(root)
+
+        if not root.exists():
+            raise ContextError(f"Root does not exist: {self.root}")
+        self.root = root.resolve(strict=True)
+
+        if not (self.root in self.cwd.parents or self.root == self.cwd):
+            self.cwd = self.root

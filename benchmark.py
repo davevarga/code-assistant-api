@@ -38,8 +38,8 @@ def solve_task(
     context.set_root(cloning_path)
     assert context.get_root() != os.getcwd(), \
         f'Context is: {context.get_root()}'
-    assert context.get_abs() == cloning_path, \
-        f"Context management issue because {context.get_abs()} != {cloning_path}"
+    assert context.get(abs=True) == cloning_path, \
+        f"Context management issue because {context.get(abs=True)} != {cloning_path}"
     assert context.get() == '.', \
         f"Context management issue: cwd is not root ({context.get()})"
 
