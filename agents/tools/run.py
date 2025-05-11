@@ -1,37 +1,38 @@
-from smolagents import tool
-
+from smolagents import Tool
 import subprocess
 import sys
 import os
 
+from utils import ContextManager
 
-@tool
-def run_python() -> str:
-    """
-    Runs the last opened python file. Use this tool to validate your code,
-    and to check for syntax and runtime errors.
-    Returns:
-        (str): The exact output of the run
-    """
-    from utils import context
 
-    file_path = context.get_abs()
-    if os.path.isdir(file_path):
-        return (f"You are cure in {context.get()} directory."
-                f"Use the open_file_or_directory tool to open a file.")
+class RunTool(Tool):
+    name = "run_python"
+    description = """Runs the last opened python file. 
+        Use this tool to validate your code,
+        and to check for syntax and runtime errors."""
+    inputs = {}
+    output_type = "string"
 
-    if not file_path.endswith('.py'):
-        return (f"Error: '{file_path}' is not a Python file."
-                f"Use the open_file_or_directory tool to open a python file.")
+    def __init__(self, context: ContextManager, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.context = context
 
-    try:
-        result = subprocess.run(
-            [sys.executable, file_path],
-            capture_output=True,
-            text=True,
-            check=False  # Don't raise exception on non-zero exit
-        )
-        return result.stdout
-
-    except Exception as e:
-        return f"Error while running the application: {e}"
+    def forward(self) -> str:
+        file_path = self.context.get(abs=True)
+        if os.path.isdir(file_path):
+            return (f"You are cure in {self.context.get()} directory."
+                    f"Use the open_file_or_directory tool to open a file.")
+        if not file_path.endswith('.py'):
+            return (f"Error: '{file_path}' is not a Python file."
+                    f"Use the open_file_or_directory tool to open a python file.")
+        try:
+            result = subprocess.run(
+                [sys.executable, file_path],
+                capture_output=True,
+                text=True,
+                check=False  # Don't raise exception on non-zero exit
+            )
+            return result.stdout
+        except Exception as e:
+            return f"Error while running the application: {e}"

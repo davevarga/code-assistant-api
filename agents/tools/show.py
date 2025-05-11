@@ -18,7 +18,7 @@ def show_code(start: int, end: int) -> str:
         str: A formatted string where each line of code is numbered.
         Before and after the code there is additional context information.
     """
-    file_path = context.get_abs()
+    file_path = context.get(abs=True)
     try:
         with open(file_path, "r") as file:
             lines = file.readlines()

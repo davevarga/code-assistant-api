@@ -1,28 +1,35 @@
 import os
 from typing import List
-from smolagents import tool
-from utils import context
+from smolagents import Tool
+from utils import context, ContextManager
 
 
-@tool
-def find_file(filename: str) -> List[str]:
-    """
-    Finds all instances of a filename within the project
-    and returns a list of relative paths from the root
-    Args:
-        filename (str): The filename to search for
-    Returns:
-        List[str]: A list of relative paths from the root
-    """
-    root_dir = context.get_root()
+class FileTool(Tool):
+    name = "find_file"
+    description = """Finds all instances of a filename within the project
+        and returns a list of relative paths from the root"""
+    inputs = {
+        "filename": {
+            "type": "string",
+            "description": "The filename to search for"
+        }
+    }
+    output_type = "string"
 
-    matches: List[str] = []
-    for root, dirs, files in os.walk(root_dir):
-        # Modify dirs in-place to skip hidden directories
-        dirs[:] = [d for d in dirs if not d.startswith('.')]
-        if filename in files:
-            matches.append(os.path.join(root, filename))
+    def __init__(self, context: ContextManager, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.context = context
 
-    content = [os.path.join(root_dir, match) for match in matches]
-    content = [path.replace("\\", "/") for path in content]
-    return content
+    def forward(self, filename: str) -> str:
+        root_dir = self.context.get_root()
+        matches: List[str] = []
+        for root, dirs, files in os.walk(root_dir):
+            # Modify dirs in-place to skip hidden directories
+            dirs[:] = [d for d in dirs if not d.startswith('.')]
+            if filename in files:
+                matches.append(os.path.join(root, filename))
+                matches.append(os.path.join(root, filename))
+
+        content = [os.path.join(root_dir, match) for match in matches]
+        content = [path.replace("\\", "/") for path in content]
+        return '\n'.join(content)

@@ -1,60 +1,72 @@
 import os
-from smolagents import tool
-from utils import context, check_syntax
+from smolagents import Tool
+from utils import check_syntax, ContextManager
 
 
-@tool
-def insert_code(start: int, code: str) -> str:
-    """
-    Insert the given code at the specified line number, in the last opened file.
-    Args:
-        start (int): The line before which the code will be inserted
-        code (str): The python code to be inserted
-    Returns:
-        str: Feedback about the success of the insertion.
-    """
-    file_path = context.get_abs()
-    if os.path.isdir(file_path):
-        return (f"You are cure in {context.get()} directory. "
-                f"Use the open_file_or_directory tool to open a file "
-                f"or the create_file_or_directory tool to create one.")
+class InsertTool(Tool):
+    name = "insert_code"
+    description = """Insert the given code at the specified line number,
+        in the last opened file. Feedback about the success of the insertion."""
+    inputs = {
+        "start": {
+            "type": "number",
+            "description": "The line before which the code will be inserted",
+        },
+        "code": {
+            "type": "string",
+            "description": "The python code to be inserted",
+        }
+    }
+    output_type = "string"
 
-    try:
-        with open(file_path, "r") as file:
-            lines = file.readlines()
-        total_lines = len(lines)
+    def __init__(self, context: ContextManager, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.context = context
 
-        # Validate line interval
-        start = max(start, 1)
-        start = min(start, total_lines + 1)
+    def forward(self, start: int, code: str) -> str:
+        file_path = self.context.get(abs=True)
+        if os.path.isdir(file_path):
+            return (f"You are cure in {self.context.get()} directory. "
+                    f"Use the open_file_or_directory tool to open a file "
+                    f"or the create_file_or_directory tool to create one.")
 
-        # Insert the new code at the correct position
-        lines.insert(start, code + "\n")
-        code_lines = code.splitlines()
-        total_lines += len(code_lines)
+        try:
+            with open(file_path, "r") as file:
+                lines = file.readlines()
+            total_lines = len(lines)
 
-        # Make alterations only with syntactically correct code
-        # In case of errors give feedback to the llm.
-        errors = check_syntax('\n'.join(lines))
+            # Validate line interval
+            start = max(start, 1)
+            start = min(start, total_lines + 1)
 
-        # Write the modified content back to the file
-        with open(file_path, "w") as file:
-            file.writelines(lines)
+            # Insert the new code at the correct position
+            code_lines = [(line if line.endswith('\n') else line + '\n') for line in code.splitlines()]
+            for i, line in enumerate(code_lines):
+                lines.insert(start + i, line)
+            total_lines += len(code_lines)
 
-        # Create response for the LLM
-        response = [f"{i + start}: {line.rstrip()}\n"
-                    for i, line in enumerate(code_lines)]
+            # Make alterations only with syntactically correct code
+            # In case of errors give feedback to the llm.
+            errors = check_syntax('\n'.join(lines))
 
-        if errors:
-            # In case of erroneous code provide feedback
-            response += ["(Code returned to following errors)\n"]
-            response += "\n".join(errors) + '\n'
+            # Write the modified content back to the file
+            with open(file_path, "w") as file:
+                file.writelines(lines)
 
-        # In case of syntax error free code give feedback
-        header = [f"[File: {context.get()} ({total_lines} lines in total)]\n"]
-        return "".join(header + response)
+            # Create response for the LLM
+            response = [f"{i + start}: {line.rstrip()}\n"
+                        for i, line in enumerate(code_lines)]
 
-    except FileNotFoundError:
-        return f"Error: File '{file_path}' not found."
-    except Exception as e:
-        return f"Error: {str(e)}"
+            if errors:
+                # In case of erroneous code provide feedback
+                response += ["(Code returned to following errors)\n"]
+                response += "\n".join(errors) + '\n'
+
+            # In case of syntax error free code give feedback
+            header = [f"[File: {self.context.get()} ({total_lines} lines in total)]\n"]
+            return "".join(header + response)
+
+        except FileNotFoundError:
+            return f"Error: File '{file_path}' not found."
+        except Exception as e:
+            return f"Error: {str(e)}"
