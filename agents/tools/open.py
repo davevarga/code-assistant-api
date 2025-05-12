@@ -5,7 +5,8 @@ from utils import ContextManager, ContextPermissionError, ContextError
 class OpenTool(Tool):
     name = "open_file_or_directory"
     description = """Lets you navigate in the working directory, or open files for editing.
-        To go back use the command with the argument: ../ Returns if the procedure was successful."""
+        To go back use the command with the argument: ../ Returns if the procedure was successful.
+        If the 'home' argument is used, it will return the root directory."""
     inputs = {
         "name": {
             "type": "string",
@@ -20,10 +21,17 @@ class OpenTool(Tool):
 
     def forward(self, name: str) -> str:
         try:
-            absolute_path = self.context.get() / name
+            if name == "home":
+                self.context.set(self.context.get_root())
+                assert self.context.get(abs=True) == self.context.get_root()
+                return f"You are in the root directory: {self.context.get(abs=True)}\n"
+            absolute_path = self.context.get(abs=True) / name
             self.context.set(absolute_path)
-            return f"Successfully opened {self.context.get()}"
+            return f"Successfully opened {self.context.get()}\n"
         except ContextPermissionError:
-            return f"{name} permission denied"
+            return f"{name} permission denied\n"
         except ContextError:
-            return f"File does not exist in {self.context.get()}"
+            return (
+                f"File does not exist in {self.context.get()} context.\n"
+                f"Use this command with argument 'home' to go back to the root\n"
+            )

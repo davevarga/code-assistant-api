@@ -35,9 +35,10 @@ class SearchTool(Tool):
     inputs = {
         "template": {
             "type": "string",
-            "default": "The string to search for."
+            "description": "The string to search for."
         }
     }
+    output_type = "string"
 
     def __init__(self, context: ContextManager, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -57,10 +58,13 @@ class SearchTool(Tool):
                     if file.endswith(extensions):
                         file_path = os.path.join(root, file)
                         occurrences += search_file(file_path, template)
-        content = [
+
+        content = [f"[Found {len(occurrences)} matches for "
+                   f"'{template}' in {self.context.get()} files]"]
+        content += [
             (f"./{os.path.relpath(occurrence['path'], current_path)}"
-             f"-{occurrence['line']}"
-             f"-{occurrence['snippet']}")
+             f" at line {occurrence['line']}:"
+             f" '{occurrence['snippet']}'")
             for occurrence in occurrences
         ]
         return '\n'.join(content)

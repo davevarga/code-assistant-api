@@ -24,7 +24,11 @@ class CreateTool(Tool):
         path = curr_dir / name
 
         # Check if is already created
-        if path.exists(): return "File or directory already exists"
+        if curr_dir.is_file():
+            return ("You are inside a file. Use the open_file_or_directory"
+                    " tool with ../ or 'home' to navigate back to the directory")
+        if path.exists():
+            return "File or directory already exists"
         path = path.resolve(strict=False)
         try:
             if path.suffix:

@@ -1,8 +1,7 @@
 from phoenix.otel import register
 from openinference.instrumentation.smolagents import SmolagentsInstrumentor
-from openinference.instrumentation import using_metadata
 
-from .agents import CodingAgent
+from .agents import CodingAgent, LiteLLMAgent
 from dotenv import load_dotenv
 import os
 

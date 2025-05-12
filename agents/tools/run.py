@@ -23,7 +23,7 @@ class RunTool(Tool):
         if os.path.isdir(file_path):
             return (f"You are cure in {self.context.get()} directory."
                     f"Use the open_file_or_directory tool to open a file.")
-        if not file_path.endswith('.py'):
+        if file_path.suffix != '.py':
             return (f"Error: '{file_path}' is not a Python file."
                     f"Use the open_file_or_directory tool to open a python file.")
         try:
@@ -33,6 +33,9 @@ class RunTool(Tool):
                 text=True,
                 check=False  # Don't raise exception on non-zero exit
             )
-            return result.stdout
+            return (
+                f"Stdout:\n{result.stdout}\n"
+                f"Stderr:\n{result.stderr}"
+            )
         except Exception as e:
             return f"Error while running the application: {e}"

@@ -4,20 +4,21 @@ import git
 import os
 import pytest
 
-from utils import RepoHandler, repo_handler
+from utils import RepoHandler, repo_handler, ContextManager
 
 
 class TestRepoHandler(object):
     TEMP_DIR = "./temp"
     GITHUB_URL = f"https://github.com/kenshoo/python-style-guide.git"
-    REPO_NAME = 'kenshoo/python-style-guide'
+    REPO_NAME = 'kenshoo\python-style-guide'
     COMMIT_HASH = 'f8d6514'
 
     @pytest.fixture
     def repo_handler(self, tmp_path):
         tmp_path = tmp_path / "repos"
         tmp_path.mkdir()
-        return RepoHandler(tmp_path)
+        context_handler = ContextManager(tmp_path)
+        return RepoHandler(tmp_path, context_handler)
 
     # Test cloning
     def test_clone(self, repo_handler):

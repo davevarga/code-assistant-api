@@ -4,11 +4,20 @@ import time
 from pathlib import Path
 from git.util import rmtree
 
+from utils.context_manager import ContextManager
+from utils.logger import CSVLogger
+
 
 class RepoHandler(object):
-    def __init__(self, root: (str, Path), logger = None):
+    def __init__(
+            self,
+            root: (str, Path),
+            context_handler: ContextManager,
+            logger: CSVLogger = None
+    ):
         self.repo = None
         self.logger = logger
+        self.context = context_handler
         self.root = root if type(root) is str else str(root)
         self.path = None
         self.name = None
@@ -26,8 +35,9 @@ class RepoHandler(object):
         rmtree(self.path)
 
         # Clean up the /repo_owner/repo_name/commit_hash temp dirs
-        repo_owner = os.path.join(str(self.root), self.name.split("/")[0])
-        repo_name = os.path.join(repo_owner, self.name.split("/")[1])
+        print(self.name.split("\\"))
+        repo_owner = os.path.join(str(self.root), self.name.split("\\")[0])
+        repo_name = os.path.join(repo_owner, self.name.split("\\")[1])
 
         if not os.listdir(repo_name): os.rmdir(repo_name)
         if not os.listdir(repo_owner): os.rmdir(repo_owner)
@@ -37,10 +47,11 @@ class RepoHandler(object):
         # This is in order to keep accidental conflicts under control
         self.name = name
         self.commit = commit if commit else 'HEAD'
-        self.path = os.path.join(self.root, name, self.commit)
+        self.path = Path(os.path.join(self.root, name, self.commit))
 
-        if os.path.exists(self.path):
+        if self.path.exists():
             self.repo = git.Repo(self.path)
+            self.context.set_root(self.path)
             return self.path
         try:
             t_start = time.time()
@@ -52,6 +63,7 @@ class RepoHandler(object):
             )
             if self.commit:
                 self.repo.git.checkout(self.commit)
+            self.context.set_root(self.path)
         # Skip this repository if it couldn't be opened
         except git.exc.GitCommandError:
             raise RuntimeError(
@@ -77,3 +89,6 @@ class RepoHandler(object):
         # Stage before creating diff file
         self.repo.git.add(A=True)
         return self.repo.git.diff('--cached')
+
+    def repo_path(self, abs: bool = False) -> Path:
+        return self.path if abs else self.path.absolute()

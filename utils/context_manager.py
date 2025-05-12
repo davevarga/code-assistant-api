@@ -45,10 +45,11 @@ class ContextManager:
             raise ContextPermissionError(f"Context outside of root folder")
         self.cwd = target_path
 
-    def get(self, abs=False):
-        return self.cwd.absolute() if abs else self.cwd
+    def get(self, abs=False) -> Path:
+        relative_path = self.cwd.relative_to(self.root)
+        return self.cwd.absolute() if abs else relative_path
 
-    def get_root(self):
+    def get_root(self) -> Path:
         return self.root
 
     def set_root(self, root: (str, Path)):

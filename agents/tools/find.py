@@ -1,10 +1,10 @@
 import os
 from typing import List
 from smolagents import Tool
-from utils import context, ContextManager
+from utils import ContextManager
 
 
-class FileTool(Tool):
+class FindTool(Tool):
     name = "find_file"
     description = """Finds all instances of a filename within the project
         and returns a list of relative paths from the root"""
@@ -32,4 +32,6 @@ class FileTool(Tool):
 
         content = [os.path.join(root_dir, match) for match in matches]
         content = [path.replace("\\", "/") for path in content]
+        content = [os.path.relpath(path, root_dir) for path in content]
+        if not content: return f'No files found with name {filename}'
         return '\n'.join(content)

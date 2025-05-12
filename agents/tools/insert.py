@@ -26,7 +26,7 @@ class InsertTool(Tool):
     def forward(self, start: int, code: str) -> str:
         file_path = self.context.get(abs=True)
         if os.path.isdir(file_path):
-            return (f"You are cure in {self.context.get()} directory. "
+            return (f"You are currently in {self.context.get()} directory. "
                     f"Use the open_file_or_directory tool to open a file "
                     f"or the create_file_or_directory tool to create one.")
 
