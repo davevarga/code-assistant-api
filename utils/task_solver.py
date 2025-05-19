@@ -73,7 +73,7 @@ class RepoTaskSolver(object):
             _, test_result = self.agent.run(repo, prompt, metadata)
 
             # Replaces back testing cycles
-            if not self.retry or attempt_number > 2: break
+            if not self.retry or attempt_number > 1: break
             attempt_number += 1
             metadata['attempt_nr'] = attempt_number
             self.retry = False
@@ -90,6 +90,8 @@ class RepoTaskSolver(object):
         total_time = t_end - t_start
         self.logger.log('total_time', total_time)
         self.logger.log('attempts', attempt_number)
+
+        self.agent.reset()
         return prediction
 
     def retry_repo_task(self):

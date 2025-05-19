@@ -35,9 +35,8 @@ class RepoHandler(object):
         rmtree(self.path)
 
         # Clean up the /repo_owner/repo_name/commit_hash temp dirs
-        print(self.name.split("\\"))
-        repo_owner = os.path.join(str(self.root), self.name.split("\\")[0])
-        repo_name = os.path.join(repo_owner, self.name.split("\\")[1])
+        repo_owner = os.path.join(str(self.root), self.name.split("/")[0])
+        repo_name = os.path.join(repo_owner, self.name.split("/")[1])
 
         if not os.listdir(repo_name): os.rmdir(repo_name)
         if not os.listdir(repo_owner): os.rmdir(repo_owner)

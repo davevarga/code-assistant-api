@@ -3,7 +3,7 @@ import time
 
 from utils import CSVLogger, RepoHandler, ContextManager
 from .tools import init_toolset
-from smolagents import ToolCallingAgent, LiteLLMModel, Tool
+from smolagents import ToolCallingAgent, LiteLLMModel, Tool, ActionStep
 from openinference.instrumentation import using_metadata
 
 agent_description = (
@@ -26,6 +26,9 @@ class LiteLLMAgent:
         self.agent = None
         self.logger = logger
 
+    def reset(self):
+        self.agent.memory.reset()
+
 
 class CodingAgent(LiteLLMAgent):
     def __init__(self,context_handler: ContextManager,  logger=None, **kwargs):
@@ -37,7 +40,6 @@ class CodingAgent(LiteLLMAgent):
             tools=self.tools,
             description=agent_description,
         )
-        # Todo: Create a compression mechanism to old answers
 
     def insert_tool(self, tool: Tool):
         self.tools.append(tool)
@@ -46,7 +48,6 @@ class CodingAgent(LiteLLMAgent):
             tools=self.tools,
             description=agent_description,
         )
-        # Todo: While adding a new tool inject previous memory
 
     def run(
         self,
@@ -63,7 +64,7 @@ class CodingAgent(LiteLLMAgent):
         # Solve problem with Agent
         t_start = time.time()
         with using_metadata(metadata if metadata is not None else {}):
-            final_answer = self.agent.run(prompt)
+            final_answer = self.agent.run(prompt, reset=False)
             diff = repo.diff()
         t_end = time.time()
 
@@ -78,3 +79,7 @@ class CodingAgent(LiteLLMAgent):
             self.logger.log('input_tokens', self.agent.monitor.total_input_token_count)
 
         return diff, final_answer
+
+    def reset(self):
+        self.agent.memory.reset()
+        self.agent.monitor.reset()

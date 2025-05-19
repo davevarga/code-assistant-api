@@ -39,10 +39,10 @@ class EditTool(Tool):
             total_lines = len(lines)
 
             # Validate line interval
-            start = max(start, 1)
-            start = min(start, total_lines - 1)
-            end = min(end, total_lines - 1)
-            end = max(end, 1)
+            start = max(start, 0)
+            start = min(start, total_lines + 1)
+            end = min(end, total_lines + 1)
+            end = max(end, 0)
 
             # Prepare new content as a list of lines with newline characters
             new_lines = [line if line.endswith('\n') else line + '\n'

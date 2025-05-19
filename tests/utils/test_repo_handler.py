@@ -10,7 +10,7 @@ from utils import RepoHandler, repo_handler, ContextManager
 class TestRepoHandler(object):
     TEMP_DIR = "./temp"
     GITHUB_URL = f"https://github.com/kenshoo/python-style-guide.git"
-    REPO_NAME = 'kenshoo\python-style-guide'
+    REPO_NAME = 'kenshoo/python-style-guide'
     COMMIT_HASH = 'f8d6514'
 
     @pytest.fixture

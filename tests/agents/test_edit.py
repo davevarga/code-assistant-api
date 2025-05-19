@@ -3,12 +3,23 @@ from edit import EditTool
 from utils import ContextManager
 
 
+PYTHON_CODE ="""def factorial(n):
+    if n < 0:
+        raise ValueError("Factorial is not defined for negative numbers.")
+
+    if n == 0 or n == 1:
+        return 1
+
+    result = n * factorial(n - 1)
+    return result
+"""
+
+
 class TestEditTool(object):
     @pytest.fixture
     def create_file(self, tmp_path):
         tmp_path = tmp_path / "file.py"
-        tmp_path.touch()
-        tmp_path.write_text('import os')
+        tmp_path.write_text(PYTHON_CODE)
         return tmp_path
 
     @pytest.fixture
@@ -17,11 +28,20 @@ class TestEditTool(object):
         return EditTool(self.context)
 
     def test_edit(self, tool):
-        file_path = tool.context.get()
-        tool.forward(1, 1, 'import tool')
-        first_line = file_path.read_text()
-        assert first_line == "import tool\n"
+        file_path = tool.context.get(abs=True)
+        tool.forward(1, 2, 'import tool')
+        code = file_path.read_text()
+        code = code.splitlines()
+        assert code[0] == "import tool"
+        assert code[1].strip() == """raise ValueError("Factorial is not defined for negative numbers.")"""
 
+    def test_edit_overflow(self, tool):
+        file_path = tool.context.get(abs=True)
+        tool.forward(20, 20, 'import tool')
+        code = file_path.read_text()
+        code = code.splitlines()
+        assert code[-1] == "import tool"
+        assert code[-2].strip() == "return result"
 
     def test_edit_directory(self, tool):
         tool.context.set_root('..')
