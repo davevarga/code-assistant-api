@@ -57,11 +57,11 @@ class RepoTaskSolver(object):
         prompt = '\n'.join([description, '\n', RepoTaskSolver.diagnosis_instruction])
         metadata['phase'] = 'diagnosis'
         _, diagnosis = self.agent.run(repo, prompt, metadata)
-
+        test_result = ""
         while True:
             # Solve the problem diagnosed previously
             # This will be the diff file that is returned
-            prompt = '\n'.join([description, diagnosis, RepoTaskSolver.fixing_instruction])
+            prompt = '\n'.join([description, diagnosis, test_result, RepoTaskSolver.fixing_instruction])
             metadata['phase'] = 'fixing'
             diff, changes_made = self.agent.run(repo, prompt, metadata)
 

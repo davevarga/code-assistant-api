@@ -32,7 +32,7 @@ if __name__ == '__main__':
 
     # Download the dataset from Kaggle:
     dataset_url = 'princeton-nlp/SWE-bench_Lite'
-    dataset = load_dataset(dataset_url, split='test')
+    dataset = load_dataset(dataset_url, split='dev')
     swe_bench = pandas.DataFrame(dataset)
     if platform.system() == "Windows":
         swe_bench['repo'] = swe_bench['repo'].apply(lambda x: x.replace('/', '\\'))

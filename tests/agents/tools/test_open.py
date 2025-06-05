@@ -38,7 +38,7 @@ class TestOpenTool(object):
 
     def test_create_already_existing(self, tool):
         context_before = self.context.get()
-        target_dir = '..'
+        target_dir = '../..'
 
         response = tool.forward(target_dir)
         assert tool.context.get() == self.context.get()
