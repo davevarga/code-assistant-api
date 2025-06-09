@@ -1,6 +1,6 @@
 import pytest
 from edit import EditTool
-from utils import ContextManager
+from legacy.utils import ContextManager
 
 
 PYTHON_CODE ="""def factorial(n):

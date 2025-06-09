@@ -1,6 +1,6 @@
 from typing import List
 from smolagents import Tool
-from utils import ContextManager
+from legacy.utils import ContextManager
 
 from .create import CreateTool
 from .edit import EditTool

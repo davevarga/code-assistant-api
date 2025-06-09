@@ -3,7 +3,7 @@ import subprocess
 import sys
 import os
 
-from utils import ContextManager
+from legacy.utils import ContextManager
 
 
 class RunTool(Tool):

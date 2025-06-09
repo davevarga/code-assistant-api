@@ -1,8 +1,7 @@
-from typing import List
 from smolagents import tool, Tool
 import os
 
-from utils import ContextManager
+from legacy.utils import ContextManager
 
 extensions = ('.py', '.pyi', '.sh', '.bash', '.psi'
               '.toml', '.ini', '.cfg', '.json', '.yaml', '.yml'

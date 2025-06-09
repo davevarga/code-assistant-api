@@ -1,10 +1,8 @@
-import shutil
-
 import git
 import os
 import pytest
 
-from utils import RepoHandler, repo_handler, ContextManager
+from legacy.utils import RepoHandler, ContextManager
 
 
 class TestRepoHandler(object):

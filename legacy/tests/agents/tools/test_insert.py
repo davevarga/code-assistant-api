@@ -1,6 +1,6 @@
 import pytest
 from insert import InsertTool
-from utils import ContextManager
+from legacy.utils import ContextManager
 
 
 class TestInsertTool(object):

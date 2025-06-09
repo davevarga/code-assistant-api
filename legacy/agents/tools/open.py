@@ -1,5 +1,5 @@
 from smolagents import Tool
-from utils import ContextManager, ContextPermissionError, ContextError
+from legacy.utils import ContextManager, ContextPermissionError, ContextError
 
 
 class OpenTool(Tool):

@@ -1,7 +1,7 @@
 import os
 import time
 
-from utils import CSVLogger, RepoHandler, ContextManager
+from legacy.utils import CSVLogger, RepoHandler, ContextManager
 from .tools import init_toolset
 from smolagents import ToolCallingAgent, LiteLLMModel, Tool, ActionStep
 from openinference.instrumentation import using_metadata

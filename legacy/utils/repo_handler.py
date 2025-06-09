@@ -4,8 +4,8 @@ import time
 from pathlib import Path
 from git.util import rmtree
 
-from utils.context_manager import ContextManager
-from utils.logger import CSVLogger
+from legacy.utils.context_manager import ContextManager
+from legacy.utils.logger import CSVLogger
 
 
 class RepoHandler(object):

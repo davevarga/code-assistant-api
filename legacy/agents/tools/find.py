@@ -1,7 +1,7 @@
 import os
 from typing import List
 from smolagents import Tool
-from utils import ContextManager
+from legacy.utils import ContextManager
 
 
 class FindTool(Tool):

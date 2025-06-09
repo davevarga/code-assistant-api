@@ -1,8 +1,6 @@
-import os
 import pytest
-from pathlib import Path
 from create import CreateTool
-from utils import ContextManager
+from legacy.utils import ContextManager
 
 
 class TestCreateTool(object):

@@ -1,7 +1,7 @@
 import os
 import pytest
 from pathlib import Path
-from agents.utils import CodeFormatter
+from legacy.agents.utils import CodeFormatter
 
 TEST_FILE = "tests/agents/test_file.py"
 

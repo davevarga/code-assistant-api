@@ -1,5 +1,5 @@
 from smolagents import Tool
-from utils import ContextManager
+from legacy.utils import ContextManager
 
 
 #  Extracts a portion of a Python file, numbers each line,

@@ -1,8 +1,6 @@
-import os
 import pytest
-from pathlib import Path
 from open import OpenTool
-from utils import ContextManager, ContextError, ContextPermissionError
+from legacy.utils import ContextManager
 
 
 class TestOpenTool(object):

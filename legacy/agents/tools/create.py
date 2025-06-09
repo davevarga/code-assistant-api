@@ -1,5 +1,5 @@
 from smolagents import Tool
-from utils import ContextManager
+from legacy.utils import ContextManager
 
 
 class CreateTool(Tool):

@@ -1,5 +1,5 @@
 from smolagents import Tool
-from utils import check_syntax, ContextManager
+from legacy.utils import check_syntax, ContextManager
 
 
 class EditTool(Tool):

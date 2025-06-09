@@ -9,7 +9,7 @@ services:
 
   agent:
     build:
-      context: .
+      context: ..
       dockerfile: docker/Dockerfile
     volumes:
       - ./results:/results
